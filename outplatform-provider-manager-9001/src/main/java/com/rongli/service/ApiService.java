@@ -3,13 +3,10 @@ package com.rongli.service;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,16 +14,12 @@ import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.rongli.common.util.StringUtil;
 import com.rongli.common.exception.BaseException;
 import com.rongli.common.util.DateUtil;
 import com.rongli.entities.ResultBody;
-import com.rongli.entities.params.PayEntity;
-import com.rongli.entities.params.Recharge;
-import com.rongli.entities.params.Register;
 import com.rongli.mapper.primary.DictMapper;
 import com.rongli.mapper.primary.PatientMapper;
 import com.rongli.mapper.primary.PayMapper;
@@ -62,7 +55,7 @@ public class ApiService {
 	 */
 	public Object selectPatientList(Integer page, Integer limit,
 			String name, String termId, String patientId, String cardType, String tradeResult,
-			String datetype, String startDate, String endDate){
+			String datetype, String startDate, String endDate, Boolean isExport){
 		
 		if(page == null || page <= 0) {
 			page = 1;
@@ -87,16 +80,21 @@ public class ApiService {
 			endDate += " 23:59:59";
 		}
 
-		PageHelper.startPage(page, limit);
-		List<JSONObject> patientList = patientMapper.selectPatientList(name, termId, patientId, cardType, tradeResult, startDate, endDate);
-	
-		PageInfo<JSONObject> pageInfo = new PageInfo<>(patientList);
-		JSONObject obj = new JSONObject();
-		obj.putAll(ResultBody.success().toMap());
-		obj.put("count", pageInfo.getTotal());
-		obj.put("data", pageInfo.getList());
+		if(isExport) {
+			List<JSONObject> patientList = patientMapper.selectPatientList(name, termId, patientId, cardType, tradeResult, startDate, endDate);
+			return ResultBody.success("查询成功！", patientList);
+		}else {
+			PageHelper.startPage(page, limit);
+			List<JSONObject> patientList = patientMapper.selectPatientList(name, termId, patientId, cardType, tradeResult, startDate, endDate);
 		
-		return obj;
+			PageInfo<JSONObject> pageInfo = new PageInfo<>(patientList);
+			JSONObject obj = new JSONObject();
+			obj.putAll(ResultBody.success().toMap());
+			obj.put("count", pageInfo.getTotal());
+			obj.put("data", pageInfo.getList());
+			
+			return obj;
+		}
 	}
 	
 	/**
@@ -113,7 +111,7 @@ public class ApiService {
 	public Object selectPayList(Integer page, Integer limit,
 			String name, String termId, String orderId, String billId, String transactionNo, String bankCardNo, String totalFee,
 			String channelType, String payType, String cardType, String tradeResult,
-			String datetype, String startDate, String endDate) {
+			String datetype, String startDate, String endDate, Boolean isExport) {
 		
 		if(page == null || page <= 0) {
 			page = 1;
@@ -138,18 +136,25 @@ public class ApiService {
 			endDate += " 23:59:59";
 		}
 		
-		PageHelper.startPage(page, limit);
-		List<JSONObject> payList = payMapper.selectPayList(name, termId, orderId, billId, transactionNo, bankCardNo, totalFee,
-				channelType, payType, cardType, tradeResult,
-				datetype, startDate, endDate);
+		if(isExport) {
+			List<JSONObject> payList = payMapper.selectPayList(name, termId, orderId, billId, transactionNo, bankCardNo, totalFee,
+					channelType, payType, cardType, tradeResult,
+					datetype, startDate, endDate);
+			return ResultBody.success("查询成功", payList);
+		}else {
+			PageHelper.startPage(page, limit);
+			List<JSONObject> payList = payMapper.selectPayList(name, termId, orderId, billId, transactionNo, bankCardNo, totalFee,
+					channelType, payType, cardType, tradeResult,
+					datetype, startDate, endDate);
 
-		PageInfo<JSONObject> pageInfo = new PageInfo<>(payList);
-		JSONObject obj = new JSONObject();
-		obj.putAll(ResultBody.success().toMap());
-		obj.put("count", pageInfo.getTotal());
-		obj.put("data", pageInfo.getList());
-		
-		return obj;
+			PageInfo<JSONObject> pageInfo = new PageInfo<>(payList);
+			JSONObject obj = new JSONObject();
+			obj.putAll(ResultBody.success().toMap());
+			obj.put("count", pageInfo.getTotal());
+			obj.put("data", pageInfo.getList());
+			
+			return obj;
+		}
 	}
 	
 	/**
@@ -166,7 +171,7 @@ public class ApiService {
 	public Object selectRechargeList(Integer page, Integer limit,
 			String name, String termId, String orderId, String transactionNo, String bankCardNo, String amount,
 			String channelType, String tradeResult,
-			String datetype, String startDate, String endDate) {
+			String datetype, String startDate, String endDate, Boolean isExport) {
 		
 		if(page == null || page <= 0) {
 			page = 1;
@@ -191,18 +196,25 @@ public class ApiService {
 			endDate += " 23:59:59";
 		}
 		
-		PageHelper.startPage(page, limit);
-		List<JSONObject> rechargeList = rechargeMapper.selectRechargeList(name, termId, orderId, transactionNo, bankCardNo, amount,
-				channelType, tradeResult,
-				datetype, startDate, endDate);
-		
-		PageInfo<JSONObject> pageInfo = new PageInfo<>(rechargeList);
-		JSONObject obj = new JSONObject();
-		obj.putAll(ResultBody.success().toMap());
-		obj.put("count", pageInfo.getTotal());
-		obj.put("data", pageInfo.getList());
-		
-		return obj;
+		if(isExport) {
+			List<JSONObject> rechargeList = rechargeMapper.selectRechargeList(name, termId, orderId, transactionNo, bankCardNo, amount,
+					channelType, tradeResult,
+					datetype, startDate, endDate);
+			return ResultBody.success("查询成功", rechargeList);
+		}else {
+			PageHelper.startPage(page, limit);
+			List<JSONObject> rechargeList = rechargeMapper.selectRechargeList(name, termId, orderId, transactionNo, bankCardNo, amount,
+					channelType, tradeResult,
+					datetype, startDate, endDate);
+			
+			PageInfo<JSONObject> pageInfo = new PageInfo<>(rechargeList);
+			JSONObject obj = new JSONObject();
+			obj.putAll(ResultBody.success().toMap());
+			obj.put("count", pageInfo.getTotal());
+			obj.put("data", pageInfo.getList());
+			
+			return obj;
+		}
 	}
 	
 	/**
@@ -220,7 +232,7 @@ public class ApiService {
 			String name, String termId, String orderId, String hospOrderId, String transactionNo, String bankCardNo, String totalFee,
 			String departmentId, String doctorId,
 			String channelType, String payType, String cardType, String tradeResult,
-			String datetype, String startDate, String endDate) {
+			String datetype, String startDate, String endDate, Boolean isExport) {
 		
 		if(page == null || page <= 0) {
 			page = 1;
@@ -245,21 +257,36 @@ public class ApiService {
 			endDate += " 23:59:59";
 		}
 		
-		PageHelper.startPage(page, limit);
-		List<JSONObject> registerList = registerMapper.selectRegisterList(name, termId, orderId, hospOrderId, transactionNo, bankCardNo, totalFee,
-				departmentId, doctorId,
-				channelType, payType, cardType, tradeResult,
-				datetype, startDate, endDate);
-		
-		PageInfo<JSONObject> pageInfo = new PageInfo<>(registerList);
-		JSONObject obj = new JSONObject();
-		obj.putAll(ResultBody.success().toMap());
-		obj.put("count", pageInfo.getTotal());
-		obj.put("data", pageInfo.getList());
-		
-		return obj;
+		if(isExport) {
+			List<JSONObject> registerList = registerMapper.selectRegisterList(name, termId, orderId, hospOrderId, transactionNo, bankCardNo, totalFee,
+					departmentId, doctorId,
+					channelType, payType, cardType, tradeResult,
+					datetype, startDate, endDate);
+			return ResultBody.success("查询成功", registerList);
+		}else {
+			PageHelper.startPage(page, limit);
+			List<JSONObject> registerList = registerMapper.selectRegisterList(name, termId, orderId, hospOrderId, transactionNo, bankCardNo, totalFee,
+					departmentId, doctorId,
+					channelType, payType, cardType, tradeResult,
+					datetype, startDate, endDate);
+			
+			PageInfo<JSONObject> pageInfo = new PageInfo<>(registerList);
+			JSONObject obj = new JSONObject();
+			obj.putAll(ResultBody.success().toMap());
+			obj.put("count", pageInfo.getTotal());
+			obj.put("data", pageInfo.getList());
+			
+			return obj;
+		}
 	}
 	
+	/**
+	 * 业务类型
+	 * @return
+	 */
+	public List<JSONObject> selectBusinessList() {
+		return dictMapper.selectBusinessList();
+	}
 	
 	/**
 	 * 支付渠道
@@ -589,6 +616,96 @@ public class ApiService {
 		obj.putAll(ResultBody.success().toMap());
 		obj.put("deptList", deptList);
 		obj.put("doctorList", doctorContainer);
+		return obj;
+	}
+	
+	public Object totalConsole(List<String> businessIdList, List<String> channelTypeList, String tradeResult, String datetype, String startDate, String endDate) {
+
+		if(!StringUtils.isEmpty(startDate) && !StringUtils.isEmpty(endDate)) {
+			if(StringUtil.compare("y", datetype)) {
+				if(!StringUtil.compare(startDate, endDate))
+					throw new BaseException("日期格式错误");
+				startDate = DateUtil.getYearFirst(Integer.parseInt(startDate));
+				endDate = DateUtil.getYearLast(Integer.parseInt(endDate));
+			}else if(StringUtil.compare("m", datetype)) {
+				if(!StringUtil.compare(startDate, endDate))
+					throw new BaseException("日期格式错误");
+				List<String> datelist = DateUtil.getMonthFullDay(startDate);
+				startDate = datelist.get(0);
+				endDate = datelist.get(datelist.size()-1);
+			}
+			startDate += " 00:00:00";
+			endDate += " 23:59:59";
+		}
+		
+		List<JSONObject> list = patientMapper.selectCountAndSumByDateAndBusinessAndChannel(businessIdList, channelTypeList, tradeResult, datetype, startDate, endDate);
+		List<String> dateList = new ArrayList<>();
+		List<JSONObject> data = new ArrayList<>();
+		JSONObject row = null;
+		Boolean isEmpty = true;
+		for (JSONObject obj : list) {
+			String tradeTime = obj.getString("tradeTime");
+			if(!dateList.contains(tradeTime)) {
+				dateList.add(tradeTime);
+				row = new JSONObject();
+				isEmpty = true;
+			}
+			for (String businessId : businessIdList) {
+				for (String channelType : channelTypeList) {
+					if(businessId.equals(obj.getString("businessId")) && channelType.equals(obj.getString("channelType"))) {
+						row.put("tradeTime", tradeTime);
+						row.put(businessId + "_" + channelType + "_sum", obj.getBigDecimal("sum"));
+						row.put(businessId + "_" + channelType + "_count", obj.getInteger("count"));
+						break;
+					}
+				}
+			}
+			if(isEmpty) {
+				data.add(row);
+				isEmpty = false;
+			}
+		}
+		
+		// 获取折线集合
+		List<JSONObject> lineList = new ArrayList<>(); // 折线集合
+		for(String businessId : businessIdList) { // 根据业务类型
+			JSONObject one = new JSONObject();
+			List<Integer> countList = new ArrayList<>();
+			List<BigDecimal> sumList = new ArrayList<>();
+			for (String date: dateList) { // 根据时间
+				Boolean b = true; // 该时间段是否没有交易数据
+				for (JSONObject line: list) { // 获取 sum、count集合
+					if(businessId.equals(line.get("businessId")) && date.equals(line.get("tradeTime"))) {
+						countList.add(Integer.parseInt(line.getString("count")));
+						sumList.add(new BigDecimal(line.getString("sum")));
+						b = false; // 有交易数据
+						break;
+					}
+				}
+				// 没有交易数据就赋值0
+				if(b) {
+					countList.add(0);
+					sumList.add(new BigDecimal(0));
+				}
+			}
+			one.put("businessId", businessId);
+			one.put("countList", countList);
+			one.put("sumList", sumList);
+			lineList.add(one);
+		}
+		// line
+		JSONObject lineObj = new JSONObject();
+		lineObj.put("data", lineList);
+		lineObj.put("xAxis", dateList);
+		
+		JSONObject obj = new JSONObject();
+		obj.putAll(ResultBody.success().toMap());
+		obj.put("data", data);
+		obj.put("line", lineObj);
+		obj.put("pie", patientMapper.selectCountAndSumByBusinessId(businessIdList, channelTypeList, tradeResult, datetype, startDate, endDate));
+		List<JSONObject> succAndFail  = patientMapper.selectCountAndSumByTradeResult(businessIdList, channelTypeList, datetype, startDate, endDate);
+		obj.put("success", succAndFail.get(0));
+		obj.put("fail", succAndFail.get(1));
 		return obj;
 	}
 	

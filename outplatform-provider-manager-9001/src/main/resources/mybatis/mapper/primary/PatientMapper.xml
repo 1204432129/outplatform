@@ -31,4 +31,101 @@
 		</where>
 	</select>
 	
+	<select id="selectCountAndSumByDateAndBusinessAndChannel" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum ,
+			trade_result,
+			business_id, business_desc,
+			channel_type, channel_type_desc
+			<if test='datetype.equals("y")'>
+				, DATE_FORMAT(trade_time,'%Y-%m') as trade_time 
+			</if>
+			<if test='datetype.equals("m") or datetype.equals("d")'>
+				, DATE_FORMAT(trade_time,'%Y-%m-%d') as trade_time 
+			</if>
+		FROM v_api_total 
+		<where>
+			<if test="businessIdList != null and businessIdList.size > 0">
+				AND business_id
+				<foreach collection="businessIdList" item="businessId" open="IN (" close=")" separator=",">
+					#{businessId}
+				</foreach>
+			</if>
+			<if test="channelTypeList != null and channelTypeList.size > 0">
+				AND channel_type
+				<foreach collection="channelTypeList" item="channelType" open="IN (" close=")" separator=",">
+					#{channelType}
+				</foreach>
+			</if>
+			<if test="tradeResult != null and tradeResult != ''">
+				AND trade_result = #{tradeResult} 
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY channel_type, business_id
+		<if test='datetype.equals("y")'>
+			, DATE_FORMAT(trade_time,'%Y-%m') 
+		</if>
+		<if test='datetype.equals("m") or datetype.equals("d")'>
+			, DATE_FORMAT(trade_time,'%Y-%m-%d') 
+		</if>
+		ORDER BY trade_time ASC 
+	</select>
+	
+	<select id="selectCountAndSumByBusinessId" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum, trade_result, business_id, business_desc 
+		FROM v_api_total 
+		<where>
+			<if test="businessIdList != null and businessIdList.size > 0">
+				AND business_id
+				<foreach collection="businessIdList" item="businessId" open="IN (" close=")" separator=",">
+					#{businessId}
+				</foreach>
+			</if>
+			<if test="channelTypeList != null and channelTypeList.size > 0">
+				AND channel_type
+				<foreach collection="channelTypeList" item="channelType" open="IN (" close=")" separator=",">
+					#{channelType}
+				</foreach>
+			</if>
+			<if test="tradeResult != null and tradeResult != ''">
+				AND trade_result = #{tradeResult} 
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY business_id
+	</select>
+	
+	<select id="selectCountAndSumByTradeResult" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum, trade_result 
+		FROM v_api_total 
+		<where>
+			<if test="businessIdList != null and businessIdList.size > 0">
+				AND business_id
+				<foreach collection="businessIdList" item="businessId" open="IN (" close=")" separator=",">
+					#{businessId}
+				</foreach>
+			</if>
+			<if test="channelTypeList != null and channelTypeList.size > 0">
+				AND channel_type
+				<foreach collection="channelTypeList" item="channelType" open="IN (" close=")" separator=",">
+					#{channelType}
+				</foreach>
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY trade_result
+		ORDER BY trade_result ASC
+	</select>
 </mapper>

@@ -15,7 +15,7 @@ public interface DictMapper extends BaseMapper {
 	@Select("SELECT dic_name,func_name FROM t_dic_list;")
 	public List<JSONObject> selectDictList();
 	
-	@Select("SELECT channel_type, channel_type_desc FROM t_dic_channel")
+	@Select("SELECT channel_type value, channel_type_desc name FROM t_dic_channel")
 	public List<JSONObject> selectChannelList();
 
 	@Select("SELECT card_type, card_type_desc FROM t_dic_cardtype")
@@ -23,5 +23,8 @@ public interface DictMapper extends BaseMapper {
 
 	@Select("SELECT pay_type, pay_type_desc FROM t_dic_paytype")
 	public List<JSONObject> selectPayTypeList();
+
+	@Select("SELECT business_id value, business_desc name FROM t_dic_business")
+	public List<JSONObject> selectBusinessList();
 	
 }

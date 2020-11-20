@@ -1,5 +1,6 @@
 package com.rongli.test.mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
@@ -26,5 +27,23 @@ public class PatientMapperTest {
 		List<JSONObject> list = patientMapper.selectPatientList("测","","","","d", "2020-11-01 00:00:00", "2020-11-30 00:00:00");
 		System.out.println(list.get(0).toJSONString());
 		System.out.println(list.size());
+	}
+	
+	@Test
+	public void test2() {
+		List<String> businessIdList = new ArrayList<String>();
+		businessIdList.add("0");
+		businessIdList.add("1");
+		businessIdList.add("2");
+		businessIdList.add("3");
+		businessIdList.add("4");
+		businessIdList.add("5");
+		List<String> channelTypeList = new ArrayList<String>();
+		channelTypeList.add("1");
+		channelTypeList.add("2");
+		List<JSONObject> list = patientMapper.selectCountAndSumByDateAndBusinessAndChannel(businessIdList, channelTypeList, "0", "d", "2020-10-01 00:00:00", "2020-11-30 00:00:00");
+		for (JSONObject obj : list) {
+			System.out.println(obj.toJSONString());
+		}
 	}
 }

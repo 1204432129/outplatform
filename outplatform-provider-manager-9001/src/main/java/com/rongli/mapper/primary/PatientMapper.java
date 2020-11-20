@@ -13,5 +13,19 @@ import com.rongli.entities.params.Patient;
 public interface PatientMapper extends BaseMapper<Patient> {
 	
 	public List<JSONObject> selectPatientList(String name, String termId, String patientId, String cardType, String tradeResult, String startDate, String endDate);
+	
+	/*
+	 * 表数据，折线图
+	 */
+	public List<JSONObject> selectCountAndSumByDateAndBusinessAndChannel(List<String> businessIdList, List<String> channelTypeList, String tradeResult, String datetype, String startDate, String endDate);
+	
+	/*
+	 * 饼状图
+	 */
+	public List<JSONObject> selectCountAndSumByBusinessId(List<String> businessIdList, List<String> channelTypeList, String tradeResult, String datetype, String startDate, String endDate);
 
+	/*
+	 * 统计成功与失败
+	 */
+	public List<JSONObject> selectCountAndSumByTradeResult(List<String> businessIdList, List<String> channelTypeList, String datetype, String startDate, String endDate);
 }

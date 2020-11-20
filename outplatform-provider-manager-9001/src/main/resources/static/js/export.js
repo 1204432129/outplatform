@@ -9,7 +9,7 @@
  *  - newStr扩展行数据
  */
 function exportFile(excel,data,cols,fileName,newStr) {
-	var chars = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+	var chars = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO','AP','AQ','AR','AS','AT','AU','AV','AW','AX','AY','AZ'];
 	var bodysArr = new Array(); // excel导出的数据格式
 	var rows = new Array(); // 列名集合
 	var fields = new Array();// 列字段
@@ -103,7 +103,6 @@ function exportFile(excel,data,cols,fileName,newStr) {
 	bodysArr.unshift(fileNames);// 添加标题
 
 	var lastCol = chars[fields.length - 1] + bodysArr.length;
-	
 	//设置列标题样式
 	excel.setExportCellStyle(bodysArr, 'A1:'+lastCol, {
 		s: {
@@ -124,14 +123,7 @@ function exportFile(excel,data,cols,fileName,newStr) {
 		}, function(cell, newCell, row, config, currentRow, currentCol, fieldKey) {
 			return (currentRow != bodysArr.length - 1) ? cell : newCell ;// 合计上色
 		});
-	else
-		excel.setExportCellStyle(bodysArr, 'A'+(rows.length+1+1)+':'+lastCol, { // 表头+标题+1起始
-			s: {
-				fill: {fgColor: { rgb: "DDDDDD" } }
-			}
-		}, function(cell, newCell, row, config, currentRow, currentCol, fieldKey) {
-			return (currentRow <= bodysArr.length - 3) ? cell : newCell ;// 合计上色
-		});
+
 	// 设置边框、文本居中
 	excel.setExportCellStyle(bodysArr, 'A1:'+lastCol, {
 		s: {

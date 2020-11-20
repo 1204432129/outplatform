@@ -60,7 +60,7 @@
 				<div class="layui-input-inline">
 					<select id="channelType" lay-filter="channelType" th:with="list=${@apiService.selectChannelList()}">
 						<option value=""></option>
-						<option  th:each="channel:${list}" th:value="${channel.channelType}" th:text="${channel.channelTypeDesc}"></option>
+						<option  th:each="channel:${list}" th:value="${channel.value}" th:text="${channel.name}"></option>
 					</select>
 				</div>
 			</div>
@@ -111,6 +111,9 @@
 			<div class="layui-inline">
 				<button class="layui-btn" type="button" id="btn-query"><i class="layui-icon layui-icon-search"></i>搜索</button>
 			</div>
+			<div class="layui-inline">
+				<button class="layui-btn" type="button" id="btn-export"><i class="layui-icon"></i>导出Excel</button>
+			</div>
 		</div>
 	</form>
 </blockquote>
@@ -119,6 +122,7 @@
 <script th:src="@{/js/jquery-3.5.1.min.js}"></script>
 <script th:src="@{/js/Call_Ajaxtools.js}"></script>
 <script th:src="@{/js/axios.min.js}"></script>
+<script th:src="@{/js/export.js}"></script>
 <script th:src="@{/js/C1.js}"></script>   
 <script th:src="@{/layuiadmin/layui/layui.js}"></script>  
 <script th:inline="text">
@@ -128,11 +132,12 @@ layui.config({
   }).extend({
 	    index: 'lib/index', //主入口模块
 	    formSelects: 'lib/extend/formSelects-v4'
-  }).use(['form','table','layer', 'formSelects', 'laydate'], function(){
+  }).use(['form','table','layer', 'formSelects', 'laydate', 'excel'], function(){
 		let table = layui.table;
 		let form = layui.form;
 		let formSelects = layui.formSelects;
 		let laydate = layui.laydate;
+		let excel = layui.excel;
 		
 		laydate.render({
 			elem: '#tradeTime'
@@ -178,8 +183,8 @@ layui.config({
 						,type: 'date'
 						,range: "~"
 						,min: C1_GetAfterDate(-30)
-						,max: C1_GetAfterDate(-1)
-						,value:C1_GetAfterDate(-30)+" ~ "+C1_GetAfterDate(-1)
+						,max: C1_GetAfterDate(0)
+						,value:C1_GetAfterDate(-30)+" ~ "+C1_GetAfterDate(0)
 						,done: function(value, date, endDate){
 						}
 					});
@@ -216,7 +221,8 @@ layui.config({
 				tradeResult: $("#tradeResult").val().trim(),
 				datetype: datetype,
 				startDate: startDate,
-				endDate: endDate
+				endDate: endDate,
+				isExport: false
 			};
 			return params;
 		}
@@ -235,6 +241,42 @@ layui.config({
 			}
 		});
 		
+		let cols = [
+			[
+				{type: 'radio', fixed: 'left'}
+				,{field:'tradeResult', width:100,  title: '交易返回码'}
+				,{field:'tradeMessage', width:200, title: '交易返回的消息'}
+				,{field:'tradeTime', width:180, title: '交易时间'}
+				,{field:'payTime', width:180, title: '支付时间'}
+				,{field:'termId', width:100, title: '终端ID'}
+				,{field:'name', width:100, title: '用户姓名'}
+				,{field:'orderId', width:180, title: '订单号'}
+				,{field:'billId', width:180, title: '挂号订单号'}
+				,{field:'visitNo', width:180, title: '就诊号'}
+				,{field:'bankCardNo', width:180, title: '银行卡号'}
+				,{field:'transactionNo', width:180, title: '支付流水号'}
+				,{field:'channelTypeDesc', width:100, title: '支付渠道'}
+				,{field:'payTypeDesc', width:100, title: '支付类型'}
+				,{field:'totalFee', width:150, title: '待缴费总金额'}
+				,{field:'changeFee', width:100, title: '院内变更金额', hide: true}
+				,{field:'payableFee', width:100, title: '医院应付金额', hide: true}
+				,{field:'medicareFee', width:100, title: '医保统筹支付金额', hide: true}
+				,{field:'medFelfFee', width:100, title: '医保个账支付金额', hide: true}
+				,{field:'personFee', width:100, title: '用户应付金额', hide: true}
+				,{field:'feeTypeDesc', width:100, title: '费用类别', hide: true}
+				,{field:'medicareParams', width:100, title: '医保预结算参数', hide: true}
+				,{field:'operatorId', width:100, title: '操作员', hide: true}
+				,{field:'patientId', width:100, title: '院内用户id', hide: true}
+				,{field:'medicalNo', width:100, title: '病历号', hide: true}
+				,{field:'certTypeDesc', width:100, title: '用户证件类型', hide: true}
+				,{field:'certificateNo', width:100, title: '用户证件号码', hide: true}
+				,{field:'cardTypeDesc', width:100, title: '用户卡类型', hide: true}
+				,{field:'cardNo', width:100, title: '卡号', hide: true}
+				,{field:'receiptId', width:100, title: '收据号', hide: true}
+				,{field:'invoiceId', width:100, title: '发票号', hide: true}
+				,{field:'remark', width:100, title: '备注', hide: true}
+			]
+		];
 		
 		// 渲染表
 		table.render({
@@ -250,42 +292,7 @@ layui.config({
 			,where: getParam()
 			,url:'[[@{/trade/selectPayList}]]'
 			,loading:true
-			,cols: [
-				[
-					{type: 'radio', fixed: 'left'}
-					,{field:'tradeResult', width:100,  title: '交易返回码'}
-					,{field:'tradeMessage', width:200, title: '交易返回的消息'}
-					,{field:'tradeTime', width:180, title: '交易时间'}
-					,{field:'payTime', width:180, title: '支付时间'}
-					,{field:'termId', width:100, title: '终端ID'}
-					,{field:'name', width:100, title: '用户姓名'}
-					,{field:'orderId', width:180, title: '订单号'}
-					,{field:'billId', width:180, title: '挂号订单号'}
-					,{field:'visitNo', width:180, title: '就诊号'}
-					,{field:'bankCardNo', width:180, title: '银行卡号'}
-					,{field:'transactionNo', width:180, title: '支付流水号'}
-					,{field:'channelTypeDesc', width:100, title: '支付渠道'}
-					,{field:'payTypeDesc', width:100, title: '支付类型'}
-					,{field:'totalFee', width:150, title: '待缴费总金额'}
-					,{field:'changeFee', width:100, title: '院内变更金额', hide: true}
-					,{field:'payableFee', width:100, title: '医院应付金额', hide: true}
-					,{field:'medicareFee', width:100, title: '医保统筹支付金额', hide: true}
-					,{field:'medFelfFee', width:100, title: '医保个账支付金额', hide: true}
-					,{field:'personFee', width:100, title: '用户应付金额', hide: true}
-					,{field:'feeTypeDesc', width:100, title: '费用类别', hide: true}
-					,{field:'medicareParams', width:100, title: '医保预结算参数', hide: true}
-					,{field:'operatorId', width:100, title: '操作员', hide: true}
-					,{field:'patientId', width:100, title: '院内用户id', hide: true}
-					,{field:'medicalNo', width:100, title: '病历号', hide: true}
-					,{field:'certTypeDesc', width:100, title: '用户证件类型', hide: true}
-					,{field:'certificateNo', width:100, title: '用户证件号码', hide: true}
-					,{field:'cardTypeDesc', width:100, title: '用户卡类型', hide: true}
-					,{field:'cardNo', width:100, title: '卡号', hide: true}
-					,{field:'receiptId', width:100, title: '收据号', hide: true}
-					,{field:'invoiceId', width:100, title: '发票号', hide: true}
-					,{field:'remark', width:100, title: '备注', hide: true}
-				]
-			]
+			,cols: cols
 		   	,page: true
 			,done: function (res, curr, count) {
 				console.log(res.data);
@@ -305,6 +312,21 @@ layui.config({
 		}
 		
 		
+		// 导出Excel
+		$('#btn-export').on('click', function(){
+			exportExcel();
+		});
+		let exportExcel = function(){
+			C1_showWaiting();
+			setTimeout(function(){
+				let params = getParam();
+				params.isExport = true;
+				$.post('[[@{/trade/selectPayList}]]', params, res => {
+					exportFile(excel, res.data, cols, "缴费详情表");
+					C1_closeWaiting();
+				});
+			},10);
+		}
 	});
 	
 	
