@@ -1,6 +1,7 @@
 package com.rongli.controller;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSONObject;
 import com.rongli.service.ApiService;
 
 @RestController
@@ -55,11 +57,11 @@ public class ApiController {
 	@RequestMapping("/selectRechargeList")
 	public Object selectRechargeList(Integer page, Integer limit,
 			String name, String termId, String orderId, String transactionNo, String bankCardNo, String amount,
-			String channelType, String tradeResult,
+			String channelType, String payType, String tradeResult,
 			String datetype, String startDate, String endDate, Boolean isExport) {
 		return apiService.selectRechargeList(page, limit,
 				name, termId, orderId, transactionNo, bankCardNo, amount,
-				channelType, tradeResult,
+				channelType, payType, tradeResult,
 				datetype, startDate, endDate, isExport);
 	}
 	
@@ -154,24 +156,88 @@ public class ApiController {
 	}
 	
 	/**
+	 * 获取支付类型列表
+	 * @return
+	 */
+	@RequiresPermissions("selectPayTypeList")
+	@RequestMapping("/selectPayTypeList")
+	public Object selectPayTypeList() {
+		return apiService.selectPayTypeList();
+	}
+	
+	/**
+	 * 获取终端列表
+	 * @return
+	 */
+	@RequiresPermissions("selectTermIdList")
+	@RequestMapping("/selectTermIdList")
+	public Object selectTermIdList() {
+		return apiService.selectTermIdList();
+	}
+	
+	/**
 	 * 统计汇总
 	 * @return
 	 */
 	@RequiresPermissions("totalConsole")
 	@RequestMapping("/totalConsole")
-	public Object totalConsole(String businessIds, String channelTypes, String tradeResult, String datetype, String startDate, String endDate) {
+	public Object totalConsole(String businessIds, String channelType, String payTypes, String tradeResult, String datetype, String startDate, String endDate) {
 		String[] businessIdList;
 		if(!StringUtils.isEmpty(businessIds)) {
 			businessIdList = businessIds.split(",");
 		}else {
 			businessIdList = new String[0];
 		}
+		String[] payTypeList;
+		if(!StringUtils.isEmpty(payTypes)) {
+			payTypeList = payTypes.split(",");
+		}else {
+			payTypeList = new String[0];
+		}
+		return apiService.totalConsole(Arrays.asList(businessIdList), channelType, Arrays.asList(payTypeList), tradeResult, datetype, startDate, endDate);
+	}
+	
+	/**
+	 * 渠道报表
+	 * @return
+	 */
+	@RequiresPermissions("channelConsole")
+	@RequestMapping("/channelConsole")
+	public Object channelConsole(String channelTypes, String payTypes, String tradeResult, String startDate, String endDate) {
 		String[] channelTypeList;
 		if(!StringUtils.isEmpty(channelTypes)) {
 			channelTypeList = channelTypes.split(",");
 		}else {
 			channelTypeList = new String[0];
 		}
-		return apiService.totalConsole(Arrays.asList(businessIdList), Arrays.asList(channelTypeList), tradeResult, datetype, startDate, endDate);
+		String[] payTypeList;
+		if(!StringUtils.isEmpty(payTypes)) {
+			payTypeList = payTypes.split(",");
+		}else {
+			payTypeList = new String[0];
+		}
+		return apiService.channelConsole(Arrays.asList(channelTypeList), Arrays.asList(payTypeList), tradeResult, startDate, endDate);
+	}
+	
+	/**
+	 * 终端报表
+	 * @return
+	 */
+	@RequiresPermissions("terminalConsole")
+	@RequestMapping("/terminalConsole")
+	public Object terminalConsole(String termIds, String payTypes, String tradeResult, String startDate, String endDate) {
+		String[] termIdList;
+		if(!StringUtils.isEmpty(termIds)) {
+			termIdList = termIds.split(",");
+		}else {
+			termIdList = new String[0];
+		}
+		String[] payTypeList;
+		if(!StringUtils.isEmpty(payTypes)) {
+			payTypeList = payTypes.split(",");
+		}else {
+			payTypeList = new String[0];
+		}
+		return apiService.terminalConsole(Arrays.asList(termIdList), Arrays.asList(payTypeList), tradeResult, startDate, endDate);
 	}
 }

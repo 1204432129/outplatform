@@ -43,6 +43,7 @@ public class WholeExceptionHandler {
 	@ExceptionHandler(value =Exception.class)
 	@ResponseBody
 	public ResultBody exceptionHandler(HttpServletRequest req, Exception e){
+		e.printStackTrace();
  		log.error("未知异常！原因是:",e.getMessage());
     	return ResultBody.error(CommonEnum.INTERNAL_SERVER_ERROR);
 	}

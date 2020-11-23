@@ -7,7 +7,7 @@
 	<link rel="stylesheet" th:href="@{/layuiadmin/layui/css/formSelects-v4.css?v=1}" media="all">
 	<link rel="stylesheet" th:href="@{/css/my.css?v=3}" media="all">
 	
-	<title>挂号统计</title>
+	<title>首页</title>
 	<style>
 		#total{
 			font-size:15px;line-height:40px;width:100%;font-weight:bold;
@@ -29,9 +29,18 @@
 				</div>
 			</div>
 			<div class="layui-inline">
-				<label class="layui-form-label">支付渠道</label>
+				<label class="layui-form-label">渠道</label>
 				<div class="layui-input-inline">
-					<select id="channelTypes" lay-filter="channelTypes" lay-verify="required" xm-select="channelTypes" xm-select-skin="primary" xm-select-show-count="1">
+					<select id="channelType" lay-filter="channelType" th:with="list=${@apiService.selectChannelList()}">
+						<option value="">全部</option>
+						<option th:each="channel:${list}" th:value="${channel.value}" th:text="${channel.name}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">支付类型</label>
+				<div class="layui-input-inline">
+					<select id="payTypes" lay-filter="payTypes" lay-verify="required" xm-select="payTypes" xm-select-skin="primary" xm-select-show-count="1">
 					</select>
 				</div>
 			</div>
@@ -162,13 +171,13 @@ layui.config({
 			}
 		});
 		
-		// 加载渠道列表
-		formSelects.config('channelTypes', {
-			searchUrl: "[[@{/trade/selectChannelList}]]",
+		// 加载支付类型列表
+		formSelects.config('payTypes', {
+			searchUrl: "[[@{/trade/selectPayTypeList}]]",
 			beforeSuccess: function(id, url, searchVal, result){
 				console.log(result)
-				result[1]['selected']='selected';
 				result[2]['selected']='selected';
+				result[3]['selected']='selected';
 				return result;
 			}
 		});
@@ -388,7 +397,8 @@ layui.config({
 			//查询参数
 			let params = {
 				businessIds: formSelects.value('businessIds', 'valStr'),
-				channelTypes: formSelects.value('channelTypes', 'valStr'),
+				channelType: $("#channelType").val(),
+				payTypes: formSelects.value('payTypes', 'valStr'),
 				tradeResult: $("#tradeResult").val(),
 				datetype: datetype,
 				startDate: startDate,
@@ -417,22 +427,22 @@ layui.config({
 			cols = [];
 			let businessValues = formSelects.value('businessIds', 'val');
 			let businessNames = formSelects.value('businessIds', 'name');
-			let channelValues = formSelects.value('channelTypes', 'val');
-			let channelNames = formSelects.value('channelTypes', 'name');
+			let payTypeValues = formSelects.value('payTypes', 'val');
+			let payTypeNames = formSelects.value('payTypes', 'name');
 			let row1 = [];
 			let row2 = [];
 			let row3 = [];
 			row1.push({align:'center', rowspan:3, field:'tradeTime', title:'交易时间', width:110, fixed: 'left', totalRowText: '合计'});
 			for(let i=0;i<businessNames.length;i++){
-				row1.push({align:'center', colspan: channelNames.length * 2, title: businessNames[i], width:110});
-				for(let j=0;j<channelValues.length;j++){
-					row2.push({align:'center', colspan: 2, title: channelNames[j], width:110});
-					row3.push({align:'center',field: businessValues[i] + '_' + channelValues[j] + "_sum", title: '总金额', totalRow: true, width:110, style: "background-color: " + colorList[i>=colorList.length?i-colorList.length:i], templet: function(res) {
-						let sum = res[businessValues[i] + '_' + channelValues[j] + "_sum"];
+				row1.push({align:'center', colspan: payTypeNames.length * 2, title: businessNames[i], width:110});
+				for(let j=0;j<payTypeValues.length;j++){
+					row2.push({align:'center', colspan: 2, title: payTypeNames[j], width:110});
+					row3.push({align:'center',field: businessValues[i] + '_' + payTypeValues[j] + "_sum", title: '总金额', totalRow: true, width:110, style: "background-color: " + colorList[i>=colorList.length?i-colorList.length:i], templet: function(res) {
+						let sum = res[businessValues[i] + '_' + payTypeValues[j] + "_sum"];
 						return (sum == null || sum == '')?0:sum;
 					}});
-					row3.push({align:'center',field: businessValues[i] + '_' + channelValues[j] + "_count", title: '总笔数', totalRow: true, width:110, style: "background-color: " + colorList[i>=colorList.length?i-colorList.length:i], templet: function(res) {
-						let count = res[businessValues[i] + '_' + channelValues[j] + "_count"];
+					row3.push({align:'center',field: businessValues[i] + '_' + payTypeValues[j] + "_count", title: '总笔数', totalRow: true, width:110, style: "background-color: " + colorList[i>=colorList.length?i-colorList.length:i], templet: function(res) {
+						let count = res[businessValues[i] + '_' + payTypeValues[j] + "_count"];
 						return (count == null || count == '')?0:count;
 					}});
 				}
@@ -450,6 +460,15 @@ layui.config({
 				console.log(res)
 				// 1、存数据
 				m_obj = res;
+				
+				if(m_obj.data.length <= 0){
+					return;
+				}
+				
+				// 2、拼接表头
+				loadTableHead();
+				console.log(cols);
+				
 				// 2、加载折线图
 				let lineArr=[];
 				for(let i=0;i<res.line.data.length;i++){
@@ -483,10 +502,6 @@ layui.config({
 				element.tabChange('pie', '0');
 				showPieChart("交易金额 ",pieArr);
 				
-				// 4、拼接表头
-				loadTableHead();
-				console.log(cols);
-				console.log(res.line)
 				// 5、渲染表
 				table.render({
 					elem: '#tb'
@@ -507,10 +522,10 @@ layui.config({
 						console.log(res.data);
 						
 						// 6、加载成功总金额、笔数
-						$("#successTotalSum").html(m_obj.success.sum+"元")
-						$("#successTotalCount").html(m_obj.success.count+"笔")
-						$("#failTotalSum").html(m_obj.fail.sum+"元")
-						$("#failTotalCount").html(m_obj.fail.count+"笔")
+						$("#successTotalSum").html(m_obj.success?m_obj.success.sum:0+"元")
+						$("#successTotalCount").html(m_obj.success?m_obj.success.count:0+"笔")
+						$("#failTotalSum").html(m_obj.fail?m_obj.fail.sum:0+"元")
+						$("#failTotalCount").html(m_obj.fail?m_obj.fail.count:0+"笔")
 					}
 				});
 			});

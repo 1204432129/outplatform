@@ -35,7 +35,7 @@
 				<label class="layui-form-label">卡类型</label>
 				<div class="layui-input-inline">
 					<select id="cardType" lay-filter="cartType" th:with="list=${@apiService.selectCardTypeList()}">
-						<option value=""></option>
+						<option value="">全部</option>
 						<option  th:each="card:${list}" th:value="${card.cardType}" th:text="${card.cardTypeDesc}"></option>
 					</select>
 				</div>

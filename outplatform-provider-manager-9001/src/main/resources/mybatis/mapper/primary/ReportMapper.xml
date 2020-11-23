@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rongli.mapper.primary.ReportMapper">
+
+	<cache-ref namespace="com.rongli.mapper.primary.ReportMapper"/>
+	
+	<select id="selectCountAndSumByDateAndBusinessAndChannel" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum ,
+			trade_result,
+			business_id, business_desc,
+			pay_type, pay_type_desc
+			<if test='datetype.equals("y")'>
+				, DATE_FORMAT(trade_time,'%Y-%m') as trade_time 
+			</if>
+			<if test='datetype.equals("m") or datetype.equals("d")'>
+				, DATE_FORMAT(trade_time,'%Y-%m-%d') as trade_time 
+			</if>
+		FROM v_api_total 
+		<where>
+			<if test="businessIdList != null and businessIdList.size > 0">
+				AND business_id
+				<foreach collection="businessIdList" item="businessId" open="IN (" close=")" separator=",">
+					#{businessId}
+				</foreach>
+			</if>
+			<if test="channelType != null and channelType != ''">
+				AND channel_type = #{channelType} 
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="tradeResult != null and tradeResult != ''">
+				AND trade_result = #{tradeResult} 
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY pay_type, business_id
+		<if test='datetype.equals("y")'>
+			, DATE_FORMAT(trade_time,'%Y-%m') 
+		</if>
+		<if test='datetype.equals("m") or datetype.equals("d")'>
+			, DATE_FORMAT(trade_time,'%Y-%m-%d') 
+		</if>
+		ORDER BY trade_time ASC 
+	</select>
+	
+	<select id="selectCountAndSumByBusinessId" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum, trade_result, business_id, business_desc 
+		FROM v_api_total 
+		<where>
+			<if test="businessIdList != null and businessIdList.size > 0">
+				AND business_id
+				<foreach collection="businessIdList" item="businessId" open="IN (" close=")" separator=",">
+					#{businessId}
+				</foreach>
+			</if>
+			<if test="channelType != null and channelType != ''">
+				AND channel_type = #{channelType} 
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="tradeResult != null and tradeResult != ''">
+				AND trade_result = #{tradeResult} 
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY business_id
+	</select>
+	
+	<select id="selectCountAndSumByBusinessIdAndTradeResult" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum, trade_result 
+		FROM v_api_total 
+		<where>
+			<if test="businessIdList != null and businessIdList.size > 0">
+				AND business_id
+				<foreach collection="businessIdList" item="businessId" open="IN (" close=")" separator=",">
+					#{businessId}
+				</foreach>
+			</if>
+			<if test="channelType != null and channelType != ''">
+				AND channel_type = #{channelType} 
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY trade_result
+		ORDER BY trade_result ASC
+	</select>
+	
+	<select id="selectCountAndSumByDateAndChannelAndPayType" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum ,
+			trade_result,
+			channel_type, channel_type_desc,
+			pay_type, pay_type_desc,
+			DATE_FORMAT(trade_time,'%Y-%m-%d') as trade_time
+		FROM v_api_total 
+		<where>
+			<if test="channelTypeList != null and channelTypeList.size > 0">
+				AND channel_type
+				<foreach collection="channelTypeList" item="channelType" open="IN (" close=")" separator=",">
+					#{channelType}
+				</foreach>
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="tradeResult != null and tradeResult != ''">
+				AND trade_result = #{tradeResult} 
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY pay_type, channel_type, DATE_FORMAT(trade_time,'%Y-%m-%d') 
+		ORDER BY trade_time ASC 
+	</select>
+	
+	<select id="selectCountAndSumByChannelAndTradeResult" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum, trade_result 
+		FROM v_api_total 
+		<where>
+			<if test="channelTypeList != null and channelTypeList.size > 0">
+				AND channel_type
+				<foreach collection="channelTypeList" item="channelType" open="IN (" close=")" separator=",">
+					#{channelType}
+				</foreach>
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY trade_result 
+		ORDER BY trade_result ASC 
+	</select>
+	
+	<select id="selectCountAndSumByDateAndTermIdAndPayType" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum ,
+			trade_result,
+			term_id,
+			pay_type, pay_type_desc,
+			DATE_FORMAT(trade_time,'%Y-%m-%d') as trade_time
+		FROM v_api_total 
+		<where>
+			<if test="termIdList != null and termIdList.size > 0">
+				AND term_id
+				<foreach collection="termIdList" item="termId" open="IN (" close=")" separator=",">
+					#{termId}
+				</foreach>
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="tradeResult != null and tradeResult != ''">
+				AND trade_result = #{tradeResult} 
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY pay_type, term_id, DATE_FORMAT(trade_time,'%Y-%m-%d') 
+		ORDER BY trade_time ASC 
+	</select>
+	
+	<select id="selectCountAndSumByTermIdAndTradeResult" resultType="com.alibaba.fastjson.JSONObject">
+		SELECT 
+			IFNULL(count(0), 0) count, IFNULL(sum(total_fee), 0) sum, trade_result 
+		FROM v_api_total 
+		<where>
+			<if test="termIdList != null and termIdList.size > 0">
+				AND term_id
+				<foreach collection="termIdList" item="termId" open="IN (" close=")" separator=",">
+					#{termId}
+				</foreach>
+			</if>
+			<if test="payTypeList != null and payTypeList.size > 0">
+				AND pay_type
+				<foreach collection="payTypeList" item="payType" open="IN (" close=")" separator=",">
+					#{payType}
+				</foreach>
+			</if>
+			<if test="startDate != null and startDate != ''
+				and endDate != null and endDate != ''">
+				AND trade_time BETWEEN #{startDate} and #{endDate}
+			</if>
+		</where>
+		GROUP BY trade_result 
+		ORDER BY trade_result ASC 
+	</select>
+</mapper>

@@ -25,6 +25,7 @@ import com.rongli.mapper.primary.PatientMapper;
 import com.rongli.mapper.primary.PayMapper;
 import com.rongli.mapper.primary.RechargeMapper;
 import com.rongli.mapper.primary.RegisterMapper;
+import com.rongli.mapper.primary.ReportMapper;
 
 @Service
 public class ApiService {
@@ -43,6 +44,9 @@ public class ApiService {
 	
 	@Autowired
 	private DictMapper dictMapper;
+	
+	@Autowired
+	private ReportMapper reportMapper;
 	
 	/**
 	 * 查询用户注册列表
@@ -170,7 +174,7 @@ public class ApiService {
 	 */
 	public Object selectRechargeList(Integer page, Integer limit,
 			String name, String termId, String orderId, String transactionNo, String bankCardNo, String amount,
-			String channelType, String tradeResult,
+			String channelType, String payType, String tradeResult,
 			String datetype, String startDate, String endDate, Boolean isExport) {
 		
 		if(page == null || page <= 0) {
@@ -198,13 +202,13 @@ public class ApiService {
 		
 		if(isExport) {
 			List<JSONObject> rechargeList = rechargeMapper.selectRechargeList(name, termId, orderId, transactionNo, bankCardNo, amount,
-					channelType, tradeResult,
+					channelType, payType, tradeResult,
 					datetype, startDate, endDate);
 			return ResultBody.success("查询成功", rechargeList);
 		}else {
 			PageHelper.startPage(page, limit);
 			List<JSONObject> rechargeList = rechargeMapper.selectRechargeList(name, termId, orderId, transactionNo, bankCardNo, amount,
-					channelType, tradeResult,
+					channelType, payType, tradeResult,
 					datetype, startDate, endDate);
 			
 			PageInfo<JSONObject> pageInfo = new PageInfo<>(rechargeList);
@@ -310,6 +314,14 @@ public class ApiService {
 	 */
 	public List<JSONObject> selectPayTypeList() {
 		return dictMapper.selectPayTypeList();
+	}
+	
+	/**
+	 * 终端列表
+	 * @return
+	 */
+	public List<JSONObject> selectTermIdList() {
+		return dictMapper.selectTermIdList();
 	}
 	
 	/**
@@ -424,7 +436,7 @@ public class ApiService {
 			endDate += " 23:59:59";
 		}
 		// 获取缴费列表
-		List<JSONObject> payList = rechargeMapper.selectRechargeList(null, null, null, null, null, null, null, "0", datetype, startDate, endDate);
+		List<JSONObject> payList = rechargeMapper.selectRechargeList(null, null, null, null, null, null, null, null, "0", datetype, startDate, endDate);
 
 		JSONObject obj = new JSONObject();
 		obj.putAll(ResultBody.success().toMap());
@@ -619,7 +631,10 @@ public class ApiService {
 		return obj;
 	}
 	
-	public Object totalConsole(List<String> businessIdList, List<String> channelTypeList, String tradeResult, String datetype, String startDate, String endDate) {
+	/*
+	 * 首页业务统计报表
+	 */
+	public Object totalConsole(List<String> businessIdList,String channelType, List<String> payTypeList, String tradeResult, String datetype, String startDate, String endDate) {
 
 		if(!StringUtils.isEmpty(startDate) && !StringUtils.isEmpty(endDate)) {
 			if(StringUtil.compare("y", datetype)) {
@@ -638,7 +653,7 @@ public class ApiService {
 			endDate += " 23:59:59";
 		}
 		
-		List<JSONObject> list = patientMapper.selectCountAndSumByDateAndBusinessAndChannel(businessIdList, channelTypeList, tradeResult, datetype, startDate, endDate);
+		List<JSONObject> list = reportMapper.selectCountAndSumByDateAndBusinessAndChannel(businessIdList, channelType, payTypeList, tradeResult, datetype, startDate, endDate);
 		List<String> dateList = new ArrayList<>();
 		List<JSONObject> data = new ArrayList<>();
 		JSONObject row = null;
@@ -651,11 +666,11 @@ public class ApiService {
 				isEmpty = true;
 			}
 			for (String businessId : businessIdList) {
-				for (String channelType : channelTypeList) {
-					if(businessId.equals(obj.getString("businessId")) && channelType.equals(obj.getString("channelType"))) {
+				for (String payType : payTypeList) {
+					if(businessId.equals(obj.getString("businessId")) && payType.equals(obj.getString("payType"))) {
 						row.put("tradeTime", tradeTime);
-						row.put(businessId + "_" + channelType + "_sum", obj.getBigDecimal("sum"));
-						row.put(businessId + "_" + channelType + "_count", obj.getInteger("count"));
+						row.put(businessId + "_" + payType + "_sum", obj.getBigDecimal("sum"));
+						row.put(businessId + "_" + payType + "_count", obj.getInteger("count"));
 						break;
 					}
 				}
@@ -702,10 +717,121 @@ public class ApiService {
 		obj.putAll(ResultBody.success().toMap());
 		obj.put("data", data);
 		obj.put("line", lineObj);
-		obj.put("pie", patientMapper.selectCountAndSumByBusinessId(businessIdList, channelTypeList, tradeResult, datetype, startDate, endDate));
-		List<JSONObject> succAndFail  = patientMapper.selectCountAndSumByTradeResult(businessIdList, channelTypeList, datetype, startDate, endDate);
-		obj.put("success", succAndFail.get(0));
-		obj.put("fail", succAndFail.get(1));
+		obj.put("pie", reportMapper.selectCountAndSumByBusinessId(businessIdList, channelType, payTypeList, tradeResult, datetype, startDate, endDate));
+		List<JSONObject> succAndFail  = reportMapper.selectCountAndSumByBusinessIdAndTradeResult(businessIdList, channelType, payTypeList, datetype, startDate, endDate);
+		if(succAndFail.size() == 2) {
+			obj.put("success",  succAndFail.get(0));
+			obj.put("fail", succAndFail.get(1));
+		}else if(succAndFail.size() == 1){
+			if("0".equals(succAndFail.get(0).getString("tradeResult"))) {
+				obj.put("success",  succAndFail.get(0));
+			}else {
+				obj.put("fail", succAndFail.get(1));
+			}
+		}else {
+			obj.put("success",  new JSONObject());
+			obj.put("fail", new JSONObject());
+		}
+		return obj;
+	}
+
+	public Object channelConsole(List<String> channelTypeList, List<String> payTypeList, String tradeResult, String startDate, String endDate) {
+		
+		List<JSONObject> list = reportMapper.selectCountAndSumByDateAndChannelAndPayType(channelTypeList, payTypeList, tradeResult, startDate + " 00:00:00", endDate + " 23:59:59");
+		List<String> dateList = new ArrayList<>();
+		List<JSONObject> data = new ArrayList<>();
+		JSONObject row = null;
+		Boolean isEmpty = true;
+		for (JSONObject obj : list) {
+			String tradeTime = obj.getString("tradeTime");
+			if(!dateList.contains(tradeTime)) {
+				dateList.add(tradeTime);
+				row = new JSONObject();
+				isEmpty = true;
+			}
+			for (String channelType : channelTypeList) {
+				for (String payType : payTypeList) {
+					if(channelType.equals(obj.getString("channelType")) && payType.equals(obj.getString("payType"))) {
+						row.put("tradeTime", tradeTime);
+						row.put(channelType + "_" + payType + "_sum", obj.getBigDecimal("sum"));
+						row.put(channelType + "_" + payType + "_count", obj.getInteger("count"));
+						break;
+					}
+				}
+			}
+			if(isEmpty) {
+				data.add(row);
+				isEmpty = false;
+			}
+		}
+		
+		JSONObject obj = new JSONObject();
+		obj.putAll(ResultBody.success().toMap());
+		obj.put("data", data);
+		List<JSONObject> succAndFail  = reportMapper.selectCountAndSumByChannelAndTradeResult(channelTypeList, payTypeList, startDate, endDate);
+		if(succAndFail.size() == 2) {
+			obj.put("success",  succAndFail.get(0));
+			obj.put("fail", succAndFail.get(1));
+		}else if(succAndFail.size() == 1){
+			if("0".equals(succAndFail.get(0).getString("tradeResult"))) {
+				obj.put("success",  succAndFail.get(0));
+			}else {
+				obj.put("fail", succAndFail.get(1));
+			}
+		}else {
+			obj.put("success",  new JSONObject());
+			obj.put("fail", new JSONObject());
+		}
+		return obj;
+	}
+	
+	public Object terminalConsole(List<String> termIdList, List<String> payTypeList, String tradeResult, String startDate, String endDate) {
+		
+		List<JSONObject> list = reportMapper.selectCountAndSumByDateAndTermIdAndPayType(termIdList, payTypeList, tradeResult, startDate + " 00:00:00", endDate + " 23:59:59");
+		List<String> dateList = new ArrayList<>();
+		List<JSONObject> data = new ArrayList<>();
+		JSONObject row = null;
+		Boolean isEmpty = true;
+		for (JSONObject obj : list) {
+			String tradeTime = obj.getString("tradeTime");
+			if(!dateList.contains(tradeTime)) {
+				dateList.add(tradeTime);
+				row = new JSONObject();
+				isEmpty = true;
+			}
+			for (String termId : termIdList) {
+				for (String payType : payTypeList) {
+					if(termId.equals(obj.getString("termId")) && payType.equals(obj.getString("payType"))) {
+						row.put("tradeTime", tradeTime);
+						row.put(termId + "_" + payType + "_sum", obj.getBigDecimal("sum"));
+						row.put(termId + "_" + payType + "_count", obj.getInteger("count"));
+						break;
+					}
+				}
+			}
+			if(isEmpty) {
+				data.add(row);
+				isEmpty = false;
+			}
+		}
+
+		JSONObject obj = new JSONObject();
+		obj.putAll(ResultBody.success().toMap());
+		obj.put("data", data);
+		List<JSONObject> succAndFail  = reportMapper.selectCountAndSumByTermIdAndTradeResult(termIdList, payTypeList, startDate, endDate);
+		if(succAndFail.size() == 2) {
+			obj.put("success",  succAndFail.get(0));
+			obj.put("fail", succAndFail.get(1));
+		}else if(succAndFail.size() == 1){
+			if("0".equals(succAndFail.get(0).getString("tradeResult"))) {
+				obj.put("success",  succAndFail.get(0));
+			}else {
+				obj.put("fail", succAndFail.get(1));
+			}
+		}else {
+			obj.put("success",  new JSONObject());
+			obj.put("fail", new JSONObject());
+		}
 		return obj;
 	}
 	

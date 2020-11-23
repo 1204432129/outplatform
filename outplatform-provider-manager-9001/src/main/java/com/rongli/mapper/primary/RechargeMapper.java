@@ -13,7 +13,7 @@ import com.rongli.entities.params.Recharge;
 public interface RechargeMapper extends BaseMapper<Recharge>{
 	
 	public List<JSONObject> selectRechargeList(String name, String termId, String orderId, String transactionNo, String bankCardNo, String amount,
-			String channelType, String tradeResult,
+			String channelType, String payType, String tradeResult,
 			String datetype, String startDate, String endDate);
 
 	public List<JSONObject> selectCountAndSumByDateAndChannel(String datetype, String startDate, String endDate);

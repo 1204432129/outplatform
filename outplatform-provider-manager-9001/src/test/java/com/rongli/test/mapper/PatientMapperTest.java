@@ -12,6 +12,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.alibaba.fastjson.JSONObject;
 import com.rongli.entities.params.Patient;
 import com.rongli.mapper.primary.PatientMapper;
+import com.rongli.mapper.primary.ReportMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) //servlet环境，随机端口)
@@ -19,6 +20,9 @@ public class PatientMapperTest {
 
 	@Autowired
 	private PatientMapper patientMapper;
+	
+	@Autowired
+	private ReportMapper reportMapper;
 	
 	@Test
 	public void test1() {
@@ -38,10 +42,24 @@ public class PatientMapperTest {
 		businessIdList.add("3");
 		businessIdList.add("4");
 		businessIdList.add("5");
+		List<String> payTypeList = new ArrayList<String>();
+		payTypeList.add("2");
+		payTypeList.add("3");
+		List<JSONObject> list = reportMapper.selectCountAndSumByDateAndBusinessAndChannel(businessIdList, "", payTypeList, "0", "d", "2020-10-01 00:00:00", "2020-11-30 00:00:00");
+		for (JSONObject obj : list) {
+			System.out.println(obj.toJSONString());
+		}
+	}
+	
+	@Test
+	public void test3() {
 		List<String> channelTypeList = new ArrayList<String>();
 		channelTypeList.add("1");
 		channelTypeList.add("2");
-		List<JSONObject> list = patientMapper.selectCountAndSumByDateAndBusinessAndChannel(businessIdList, channelTypeList, "0", "d", "2020-10-01 00:00:00", "2020-11-30 00:00:00");
+		List<String> payTypeList = new ArrayList<String>();
+		payTypeList.add("2");
+		payTypeList.add("3");
+		List<JSONObject> list = reportMapper.selectCountAndSumByDateAndChannelAndPayType(channelTypeList, payTypeList, "0", "2020-10-01 00:00:00", "2020-11-30 00:00:00");
 		for (JSONObject obj : list) {
 			System.out.println(obj.toJSONString());
 		}

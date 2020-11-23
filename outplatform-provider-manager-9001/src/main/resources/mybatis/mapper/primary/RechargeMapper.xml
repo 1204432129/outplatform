@@ -30,6 +30,9 @@
 			<if test="channelType != null and channelType != ''">
 				AND channel_type = #{channelType} 
 			</if>
+			<if test="payType != null and payType != ''">
+				AND pay_type = #{payType} 
+			</if>
 			<if test="tradeResult != null and tradeResult != ''">
 				AND trade_result = #{tradeResult} 
 			</if>

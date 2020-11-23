@@ -58,10 +58,10 @@ public class ApiServiceTest {
 		businessIdList.add("3");
 		businessIdList.add("4");
 		businessIdList.add("5");
-		List<String> channelTypeList = new ArrayList<String>();
-		channelTypeList.add("1");
-		channelTypeList.add("2");
-		List<JSONObject> list = (List<JSONObject>) apiService.totalConsole(businessIdList, channelTypeList, "0", "d", "2020-10-01 00:00:00", "2020-11-30 00:00:00");
+		List<String> payTypeList = new ArrayList<String>();
+		payTypeList.add("2");
+		payTypeList.add("3");
+		List<JSONObject> list = (List<JSONObject>) apiService.totalConsole(businessIdList, "", payTypeList, "0", "d", "2020-10-01 00:00:00", "2020-11-30 00:00:00");
 		for (JSONObject obj : list) {
 			System.out.println(obj.toJSONString());
 		}
